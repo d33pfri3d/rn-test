@@ -1,44 +1,78 @@
 import { StatusBar } from 'expo-status-bar';
-import { Button, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useState } from 'react';
-import "@ethersproject/shims";
-import { ethers } from 'ethers';
-import React from 'react';
+import { Button, Dimensions, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { SyntheticEvent, useState } from 'react';
+import {mnemonicToSeed} from 'bip39'; 
+
+type WalletType = {
+  address: string;
+  privateKey: string;
+};
 
 export function ImportWallet() {
-  const [mneumonic, setMneumonic] = useState<string>('');
-  const [wallet, setWallet] = useState<ethers.HDNodeWallet>();
+  const [mneumonic, setMneumonic] = useState('');
+  const [wallet, setWallet] = useState<WalletType>();
   const [error, setError] = useState<string>();
 
-  const handleSeedPhraseChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setMneumonic(event.target.value);
-  };
+  const getWalletFromSeeedPhrase = async (mneumonic: string): Promise<WalletType> => {
+    let seed = await mnemonicToSeed(mneumonic);
 
+    // Having issues with this library or the integration with expo
+    console.log('seed', seed);
+
+    // here I would get the hdkey using the ethereumjs-wallet library
+    // then get the root using the derived path
+    // get the child using the derivedChild method and pass in the index (0 by default)
+    // then get the address and private key from the child using the getAddressString and getPrivateKeyString methods
+
+    return wallet
+
+  };
+  
   const importWalletFromSeedPhrase = async () => {
+    console.log('importWalletFromSeedPhrase');
+    const test_seed = 'zero road absurd decrease frozen oblige curtain heart frown minimum flower toe';
     try {
-      const wallet = ethers.Wallet.fromPhrase(mneumonic);;
+      const wallet = await getWalletFromSeeedPhrase(test_seed);
+      console.log('wallet', wallet);
       setWallet(wallet);
     } catch (error: any) {
+      console.error(error);
       setError(error.message);
     }
   };
 
 
+  const saveWallet = async () => {
+    // save the wallet to the device
+
+    // use AES encryption to encrypt the private key - either an existing lib or roll your own
+
+    // save the encrypted private key to the device, using the keychain or secure storage library
+  };
+
+
+
   return (
-    <View>
-      <TextInput style={{ height: 40, borderColor: 'gray', borderWidth: 1, width: '100%' }} value={mneumonic} onChange={() => handleSeedPhraseChange} />
-      <button onClick={importWalletFromSeedPhrase}>Import wallet</button>
+    <View style={{flex:1, backgroundColor: 'hotpink', width: Dimensions.get('window').width, paddingTop: 60}}>
+      <Text>{mneumonic}</Text>
+      <TextInput onChangeText={(text) => setMneumonic(text)} style={{ height: 40, borderColor: 'gray', borderWidth: 1, width: '100%' }} value={mneumonic} />
       {wallet && (
         <View>
-          <p>Wallet address: {wallet.address}</p>
-          <p>Private key: {wallet.privateKey}</p>
+          <Text>Wallet address: </Text>
+          <Text>Private key: </Text>
         </View>
       )}
-      {error && <p>{error}</p>}
+      {error && <Text>{error}</Text>}
       <Button
         title="Import Wallet"
         onPress={() => {
-          console.log(mneumonic);
+          importWalletFromSeedPhrase();
+        }}
+      />
+      <Button
+        title="Save Wallet"
+        onPress={() => {
+          saveWallet();
         }}
       />
     </View>
